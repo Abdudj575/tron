@@ -93,16 +93,6 @@ class Cycle:
 
 menu = True
 is_single = False  # default
-
-# Try to load a cool font, fall back to default if not available
-try:
-    # Try to use a monospace font that looks robotic
-    title_font = pygame.font.Font(None, 72)
-    option_font = pygame.font.Font(None, 36)
-except:
-    title_font = pygame.font.Font(None, 72)
-    option_font = pygame.font.Font(None, 36)
-
 while menu:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
@@ -117,21 +107,8 @@ while menu:
                 menu = False
 
     screen.fill((0, 0, 0))
-    
-    # Draw title
-    title_text = title_font.render("WELCOME TO TRON", True, (0, 255, 255))
-    title_rect = title_text.get_rect(center=(width // 2, height // 2 - 80))
-    screen.blit(title_text, title_rect)
-    
-    # Draw options
-    option1_text = option_font.render("Press 1 for Single Player", True, (0, 255, 0))
-    option1_rect = option1_text.get_rect(center=(width // 2, height // 2 + 20))
-    screen.blit(option1_text, option1_rect)
-    
-    option2_text = option_font.render("Press 2 for Multiplayer", True, (255, 0, 255))
-    option2_rect = option2_text.get_rect(center=(width // 2, height // 2 + 60))
-    screen.blit(option2_text, option2_rect)
-    
+    text = font.render("Press 1 for Single Player, 2 for Multiplayer", True, (255, 255, 255))
+    screen.blit(text, (width // 2 - text.get_width() // 2, height // 2 - text.get_height() // 2))
     pygame.display.flip()
     clock.tick(60)
 
