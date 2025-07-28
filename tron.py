@@ -11,7 +11,15 @@ screen = pygame.display.set_mode((width, height))
 pygame.display.set_caption("Neon Tron-like Game")
 
 clock = pygame.time.Clock()
-font = pygame.font.Font(None, 50)
+# Try to load a robotic font, fall back to default if not available
+try:
+    font = pygame.font.Font("arial.ttf", 50) 
+except:
+    font = pygame.font.Font(None, 50)
+
+# Menu fonts
+title_font = pygame.font.Font(None, 80)
+menu_font = pygame.font.Font(None, 60)
 
 speed = 3
 
@@ -106,9 +114,34 @@ while menu:
                 is_single = False
                 menu = False
 
-    screen.fill((0, 0, 0))
-    text = font.render("Press 1 for Single Player, 2 for Multiplayer", True, (255, 255, 255))
-    screen.blit(text, (width // 2 - text.get_width() // 2, height // 2 - text.get_height() // 2))
+    # Animated background
+    current_time = pygame.time.get_ticks() / 1000.0
+    hue = (current_time / 15) % 1.0
+    bg_rgb = tuple(int(50 * c) for c in colorsys.hsv_to_rgb(hue, 0.3, 0.2))
+    screen.fill(bg_rgb)
+    
+    # Title
+    title_text = title_font.render("WELCOME TO TRON", True, (0, 200, 255))  # Neon light blue
+    title_glow = title_font.render("WELCOME TO TRON", True, (0, 100, 150))  # Darker blue for glow
+    
+    # Single player option
+    single_text = menu_font.render("1 - SINGLE PLAYER", True, (0, 255, 100))  # Neon green
+    single_glow = menu_font.render("1 - SINGLE PLAYER", True, (0, 150, 50))   # Darker green for glow
+    
+    # Multiplayer option
+    multi_text = menu_font.render("2 - MULTIPLAYER", True, (255, 100, 255))   # Neon pink
+    multi_glow = menu_font.render("2 - MULTIPLAYER", True, (150, 50, 150))    # Darker pink for glow
+    
+    # Draw glow effects first (slightly offset)
+    screen.blit(title_glow, (width // 2 - title_text.get_width() // 2 + 2, height // 3 - title_text.get_height() // 2 + 2))
+    screen.blit(single_glow, (width // 2 - single_text.get_width() // 2 + 1, height // 2 - single_text.get_height() // 2 + 1))
+    screen.blit(multi_glow, (width // 2 - multi_text.get_width() // 2 + 1, height // 2 + 60 - multi_text.get_height() // 2 + 1))
+    
+    # Draw main text
+    screen.blit(title_text, (width // 2 - title_text.get_width() // 2, height // 3 - title_text.get_height() // 2))
+    screen.blit(single_text, (width // 2 - single_text.get_width() // 2, height // 2 - single_text.get_height() // 2))
+    screen.blit(multi_text, (width // 2 - multi_text.get_width() // 2, height // 2 + 60 - multi_text.get_height() // 2))
+    
     pygame.display.flip()
     clock.tick(60)
 
