@@ -25,10 +25,19 @@ speed = 3
 
 directions = [(speed, 0), (0, speed), (-speed, 0), (0, -speed)]
 
-# Shield power-up settings
-SHIELD_DURATION = 5  # seconds
-SHIELD_SPAWN_INTERVAL = 7  # seconds
+# Shield power-up settings (seconds)
+SHIELD_DURATION = 5 
+SHIELD_SPAWN_INTERVAL = 7 
 SHIELD_RADIUS = 12
+
+# Collision flash settings
+FLASH_DURATION = 0.3
+flash_start_time = 0
+is_flashing = False
+
+# Game over state
+game_over = False
+winner = None
 
 class Cycle:
     def __init__(self, x, y, dir_idx, color, keys_dict=None, is_ai=False):
@@ -160,11 +169,15 @@ keys_arrows = {
 }
 
 if is_single:
-    player1 = Cycle(100, height // 2, 0, (0, 255, 0), keys_arrows, is_ai=False)  # green, starting right, user
-    player2 = Cycle(width - 100, height // 2, 2, (255, 0, 255), is_ai=True)  # magenta, starting left, AI
+    # green, starting right, user
+    player1 = Cycle(100, height // 2, 0, (0, 255, 0), keys_arrows, is_ai=False)  
+    # magenta, starting left, AI
+    player2 = Cycle(width - 100, height // 2, 2, (255, 0, 255), is_ai=True)  
 else:
-    player1 = Cycle(100, height // 2, 0, (0, 255, 0), keys_wasd, is_ai=False)  # green, starting right, player1
-    player2 = Cycle(width - 100, height // 2, 2, (255, 0, 255), keys_arrows, is_ai=False)  # magenta, starting left, player2
+    # green, starting right, player1
+    player1 = Cycle(100, height // 2, 0, (0, 255, 0), keys_wasd, is_ai=False)  
+    # magenta, starting left, player2
+    player2 = Cycle(width - 100, height // 2, 2, (255, 0, 255), keys_arrows, is_ai=False)  
 
 cycles = [player1, player2]
 
@@ -251,6 +264,9 @@ while running:
                     pass
                 else:
                     cycle.alive = False
+                    # trigger collision flash
+                    is_flashing = True
+                    flash_start_time = time.time()
             else:
                 # Draw the trail on collision and visual surfaces
                 pygame.draw.line(collision_surface, (255, 255, 255), (int(old_x), int(old_y)), (int(cycle.x), int(cycle.y)), 1)
@@ -261,8 +277,25 @@ while running:
 
     # Check if game over
     if sum(cycle.alive for cycle in cycles) < 2:
+        game_over = True
+        # Determine winner
+        if player1.alive:
+            winner = "Player 1 (Green)"
+        elif player2.alive:
+            winner = "Player 2 (Magenta)" if not is_single else "AI (Magenta)"
+        else:
+            winner = "Tie"
         running = False
 
+    # Handle collision flash effect
+    if is_flashing:
+        flash_elapsed = time.time() - flash_start_time
+        if flash_elapsed < FLASH_DURATION:
+            # Flash white during collision
+            screen.fill((255, 255, 255))
+        else:
+            is_flashing = False
+    
     # Get current neon background color
     current_time = pygame.time.get_ticks() / 1000.0
     hue = (current_time / 10)  % 1.0
@@ -272,7 +305,8 @@ while running:
     comp_hue2 = (hue + 0.6) % 1.0
     comp_rgb2 = tuple(int(255 * c) for c in colorsys.hsv_to_rgb(comp_hue2, 1.0, 1.0))
 
-    screen.fill(bg_rgb)
+    if not is_flashing:
+        screen.fill(bg_rgb)
 
     # Create colored trail displays
     trail_display1 = visual_surface1.copy()
@@ -299,6 +333,48 @@ while running:
     pygame.display.flip()
 
     clock.tick(60)
+
+# Game over screen
+if game_over:
+    game_over_running = True
+    while game_over_running:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                game_over_running = False
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_RETURN or event.key == pygame.K_SPACE:
+                    game_over_running = False
+        
+        # Animated background for game over screen
+        current_time = pygame.time.get_ticks() / 1000.0
+        hue = (current_time / 8) % 1.0
+        bg_rgb = tuple(int(30 * c) for c in colorsys.hsv_to_rgb(hue, 0.4, 0.3))
+        screen.fill(bg_rgb)
+        
+        # Game over title
+        game_over_text = title_font.render("GAME OVER", True, (255, 100, 100))  # Red
+        game_over_glow = title_font.render("GAME OVER", True, (150, 50, 50))   # Darker red for glow
+        
+        # Winner text
+        winner_text = menu_font.render(f"Winner: {winner}", True, (100, 255, 100))  # Green
+        winner_glow = menu_font.render(f"Winner: {winner}", True, (50, 150, 50))    # Darker green for glow
+        
+        # Restart instruction
+        restart_text = menu_font.render("Press ENTER or SPACE to exit", True, (200, 200, 255))  # Light blue
+        restart_glow = menu_font.render("Press ENTER or SPACE to exit", True, (100, 100, 150))  # Darker blue for glow
+        
+        # Draw glow effects first (slightly offset)
+        screen.blit(game_over_glow, (width // 2 - game_over_text.get_width() // 2 + 2, height // 3 - game_over_text.get_height() // 2 + 2))
+        screen.blit(winner_glow, (width // 2 - winner_text.get_width() // 2 + 1, height // 2 - winner_text.get_height() // 2 + 1))
+        screen.blit(restart_glow, (width // 2 - restart_text.get_width() // 2 + 1, height // 2 + 80 - restart_text.get_height() // 2 + 1))
+        
+        # Draw main text
+        screen.blit(game_over_text, (width // 2 - game_over_text.get_width() // 2, height // 3 - game_over_text.get_height() // 2))
+        screen.blit(winner_text, (width // 2 - winner_text.get_width() // 2, height // 2 - winner_text.get_height() // 2))
+        screen.blit(restart_text, (width // 2 - restart_text.get_width() // 2, height // 2 + 80 - restart_text.get_height() // 2))
+        
+        pygame.display.flip()
+        clock.tick(60)
 
 pygame.quit()
 sys.exit()
