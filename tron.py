@@ -30,10 +30,7 @@ SHIELD_DURATION = 5
 SHIELD_SPAWN_INTERVAL = 7 
 SHIELD_RADIUS = 12
 
-# Collision flash settings
-FLASH_DURATION = 0.3
-flash_start_time = 0
-is_flashing = False
+
 
 # Game over state
 game_over = False
@@ -264,9 +261,6 @@ while running:
                     pass
                 else:
                     cycle.alive = False
-                    # trigger collision flash
-                    is_flashing = True
-                    flash_start_time = time.time()
             else:
                 # Draw the trail on collision and visual surfaces
                 pygame.draw.line(collision_surface, (255, 255, 255), (int(old_x), int(old_y)), (int(cycle.x), int(cycle.y)), 1)
@@ -287,15 +281,6 @@ while running:
             winner = "Tie"
         running = False
 
-    # Handle collision flash effect
-    if is_flashing:
-        flash_elapsed = time.time() - flash_start_time
-        if flash_elapsed < FLASH_DURATION:
-            # Flash white during collision
-            screen.fill((255, 255, 255))
-        else:
-            is_flashing = False
-    
     # Get current neon background color
     current_time = pygame.time.get_ticks() / 1000.0
     hue = (current_time / 10)  % 1.0
@@ -305,8 +290,7 @@ while running:
     comp_hue2 = (hue + 0.6) % 1.0
     comp_rgb2 = tuple(int(255 * c) for c in colorsys.hsv_to_rgb(comp_hue2, 1.0, 1.0))
 
-    if not is_flashing:
-        screen.fill(bg_rgb)
+    screen.fill(bg_rgb)
 
     # Create colored trail displays
     trail_display1 = visual_surface1.copy()
